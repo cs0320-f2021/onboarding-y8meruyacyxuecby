@@ -1,0 +1,15 @@
+ARGS
+
+INPUT
+add five 10
+add five ten
+subtract five 10
+subtract five ten
+subtract O 0
+OUTPUT
+ERROR:
+ERROR:
+ERROR:
+ERROR:
+ERROR:
+END

@@ -1,0 +1,9 @@
+ARGS
+
+INPUT
+add 5.1 10.3
+subtract 11.3 101.3
+OUTPUT
+15.4
+-90.0
+END

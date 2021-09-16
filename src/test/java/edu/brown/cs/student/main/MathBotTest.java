@@ -28,4 +28,36 @@ public class MathBotTest {
   }
 
   // TODO: add more unit tests of your own
+  @Test
+  public void testBoth() {
+    MathBot bot = new MathBot();
+    double ans = bot.add(bot.subtract(18, 17), 5);
+    assertEquals(6, ans, 0.01);
+  }
+
+  @Test
+  public void testZero() {
+    MathBot bot = new MathBot();
+    assertEquals(0.0, bot.add(0.0, 0.0), 0.01);
+    assertEquals(0.0, bot.add(-1.0, 1.0), 0.01);
+    assertEquals(0.0, bot.subtract(0.0, 0.0), 0.01);
+    assertEquals(0.0, bot.subtract(1.0, 1.0), 0.01);
+  }
+
+  @Test
+  public void testNegative() {
+    MathBot bot = new MathBot();
+    assertEquals(2.0, bot.add(5.0, -3.0), 0.01);
+    assertEquals(2.0, bot.add(-3.0, 5.0), 0.01);
+    assertEquals(2.0, bot.subtract(0.0, -2.0), 0.01);
+    assertEquals(-2.0, bot.subtract(-4.0, -2.0), 0.01);
+  }
+
+  @Test
+  public void testDecimals() {
+    MathBot bot = new MathBot();
+    assertEquals(2.5, bot.add(5.0, -2.5), 0.001);
+    assertEquals(1.748, bot.add(-3.252, 5.0), 0.00001);
+    assertEquals(2.11, bot.subtract(0.11, -2.0), 0.0001);
+  }
 }
