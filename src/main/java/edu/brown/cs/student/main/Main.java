@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -44,6 +47,56 @@ public final class Main {
     this.args = args;
   }
 
+  /**
+   * Method that finds k nearest neighbors of a location
+   * @param k - number of neighbors to find
+   * @param stars - ArrayList of stars
+   * @param x - x coordinate
+   * @param y - y coordinate
+   * @param z - z coordinate
+   * @param isStar - boolean representing if it is a star or not
+   * @return ArrayList of star IDs
+   * @throws Exception - when k exceeds the number of possible neighbors
+   */
+  private ArrayList<Integer> naiveNeighbors(int k, ArrayList<Star> stars,
+                                         float x, float y, float z,
+                                         boolean isStar) throws Exception {
+    if (isStar) {
+      if (k >= stars.size()) {
+        throw new Exception("ERROR: k exceeds number of possible neighbors");
+      }
+    } else {
+      if (k > stars.size()) {
+        throw new Exception("ERROR: k exceeds number of possible neighbors");
+      }
+    }
+    Comparator<Star> starComparator = new Comparator<Star>() {
+      @Override
+      public int compare(Star s1, Star s2) {
+        return Double.compare(s1.calcDistance(x, y, z), s2.calcDistance(x, y, z));
+      }
+    };
+
+    PriorityQueue<Star> nearestQueue = new PriorityQueue<>(starComparator);
+    nearestQueue.addAll(stars);
+
+    ArrayList<Integer> nearestStars = new ArrayList<>();
+
+    for (int i = 0; i < k; i++) {
+      if (i == 0 && isStar) {
+        // If it is the first one, and it is a star, its nearest neighbor cannot
+        // be itself, so skip
+        i--;
+      } else {
+        Star nextStar = nearestQueue.poll();
+        nearestStars.add(nextStar.getId());
+      }
+    }
+
+    return nearestStars;
+
+  }
+
   private void run() {
     // set up parsing of command line flags
     OptionParser parser = new OptionParser();
@@ -60,7 +113,7 @@ public final class Main {
       runSparkServer((int) options.valueOf("port"));
     }
 
-    // TODO: Add your REPL here!
+    ArrayList<Star> stars = null;
     try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
       String input;
       while ((input = br.readLine()) != null) {
@@ -77,10 +130,68 @@ public final class Main {
             double d1 = Double.parseDouble(arguments[1]);
             double d2 = Double.parseDouble(arguments[2]);
             System.out.println(new MathBot().subtract(d1, d2));
+          } else if (arguments[0].equals("stars")) {
+            if (arguments.length != 2) {
+              throw new Exception("ERROR: Incorrect amount of arguments!");
+            }
+            stars = new CSVReader().readCSV(arguments[1]);
+            if (stars == null) {
+              throw new IOException("ERROR: Invalid File!");
+            }
+            System.out.println("Read " + stars.size() + " stars from " + arguments[1]);
+          } else if (arguments[0].equals("naive_neighbors")) {
+            if (stars == null) {
+              throw new IOException("ERROR: No Stars Loaded!");
+            }
+            if (arguments.length == 5) {
+              ArrayList<Integer> nearestStars = naiveNeighbors(
+                  Integer.parseInt(arguments[1]),
+                  stars,
+                  Float.parseFloat(arguments[2]),
+                  Float.parseFloat(arguments[3]),
+                  Float.parseFloat(arguments[4]),
+                  false);
+
+              for (int s : nearestStars) {
+                System.out.println(s);
+              }
+            } else if (arguments.length == 3) {
+              if (stars == null) {
+                throw new IOException("ERROR: No Stars Loaded!");
+              } else if (!(arguments[2].charAt(0) == arguments[2].charAt(arguments[2].length() - 1)
+                  && arguments[2].charAt(0) == '"')) {
+                throw new IOException("ERROR: Invalid star name input");
+              } else {
+                Star targetStar = null;
+                for (Star s : stars) {
+                  if (s.getName().equals(arguments[2].substring(1, arguments[2].length() - 1))) {
+                    targetStar = s;
+                    ArrayList<Integer> nearestStars = naiveNeighbors(
+                        Integer.parseInt(arguments[1]),
+                        stars,
+                        targetStar.getX(),
+                        targetStar.getY(),
+                        targetStar.getZ(),
+                        true);
+
+                    for (int id : nearestStars) {
+                      System.out.println(id);
+                    }
+                    break;
+                  }
+                }
+                if (targetStar == null) {
+                  throw new Exception("ERROR: Input star not found.");
+                }
+
+              }
+            }
+          } else {
+            throw new Exception("ERROR: Command not found");
           }
 
         } catch (Exception e) {
-          // e.printStackTrace();
+//           e.printStackTrace();
           System.out.println("ERROR: We couldn't process your input");
         }
       }
@@ -88,8 +199,9 @@ public final class Main {
       e.printStackTrace();
       System.out.println("ERROR: Invalid input for REPL");
     }
-
   }
+
+
 
   private static FreeMarkerEngine createEngine() {
     Configuration config = new Configuration(Configuration.VERSION_2_3_0);

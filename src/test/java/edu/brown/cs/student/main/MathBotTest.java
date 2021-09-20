@@ -27,7 +27,6 @@ public class MathBotTest {
     assertEquals(1, output, 0.01);
   }
 
-  // TODO: add more unit tests of your own
   @Test
   public void testBoth() {
     MathBot bot = new MathBot();

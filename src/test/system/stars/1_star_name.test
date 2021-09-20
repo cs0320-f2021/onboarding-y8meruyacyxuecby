@@ -1,0 +1,7 @@
+INPUT
+stars data/stars/ten-star.csv
+naive_neighbors 1 "Sol"
+OUTPUT
+Read 10 stars from data/stars/ten-star.csv
+70667
+END
